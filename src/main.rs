@@ -15,35 +15,61 @@ fn get_target_as<T: JsCast>(event: Event) -> T {
 
 #[component]
 fn app() -> View {
-    let content = create_signal("".to_string());
-
     let rotation = create_signal("0".to_string());
-    let color1 = create_signal("#be3c3c".to_string());
-    let color2 = create_signal("#000".to_string());
 
-    let gradient = create_selector(move || {
-        format!("linear-gradient({}deg, {}, {})", rotation, color1, color2)
+    let colors = create_signal(vec![
+        "#be3c3c".to_string(),
+        "#000".to_string(),
+        "#ffffff".to_string(),
+    ]);
+
+    let text = create_signal("".to_string());
+
+    let gradient = create_memo(move || {
+        let colors_values = colors.get_clone();
+        format!(
+            "linear-gradient({}deg, {}, {}, {})",
+            rotation, colors_values[0], colors_values[1], colors_values[2]
+        )
     });
 
-    let img_style = create_selector(move || format!("background: {}", gradient));
+    let img_style = create_memo(move || format!("background: {}", gradient));
+
+    // let color1 = colors.get_clone()[0].clone();
+    // let color2 = colors.get_clone()[1].clone();
+
+    let colors_view = colors
+        .get_clone()
+        .into_iter()
+        .enumerate()
+        .map(|(i, color)| {
+            view! {
+                input(value=color, r#type="color", on:input=move |event: web_sys::Event| {
+                    let target_as_input_elem = get_target_as::<HtmlInputElement>(event);
+                    let input_value = target_as_input_elem.value();
+
+                    let mut val = colors.get_clone_untracked();
+                    val[i] = input_value;
+                    colors.set(val);
+                })
+            }
+        })
+        .collect::<Vec<View>>();
 
     view! {
         div (class="container") {
             div(class="controls") {
-                input(value=color1, r#type="color", on:input=move |event: web_sys::Event| {
-                    let target_as_input_elem = get_target_as::<HtmlInputElement>(event);
-                    let input_value = target_as_input_elem.value();
-                    color1.set(input_value);
-                })
-                input(value=color2, r#type="color", on:input=move |event: web_sys::Event| {
-                    let target_as_input_elem = get_target_as::<HtmlInputElement>(event);
-                    let input_value = target_as_input_elem.value();
-                    color2.set(input_value);
-                })
+                (colors_view)
                 input(r#type="range", min="0", max="360", on:input=move |event: web_sys::Event| {
                     let target_as_input_elem = get_target_as::<HtmlInputElement>(event);
                     let input_value = target_as_input_elem.value();
                     rotation.set(input_value);
+                })
+
+                input(r#type="text", value=text, on:input=move |event: web_sys::Event| {
+                    let target_as_input_elem = get_target_as::<HtmlInputElement>(event);
+                    let input_value = target_as_input_elem.value();
+                    text.set(input_value);
                 })
 
                 button(on:click=move |_| async move {
@@ -52,7 +78,9 @@ fn app() -> View {
             }
 
             div (style=img_style, class="gradient", id="gradientImg") {
-                (content)
+                span {
+                    (text)
+                }
             }
         }
     }
