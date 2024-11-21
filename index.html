@@ -24,12 +24,19 @@
             .controls {
                 position: absolute;
                 background: #fff;
+                border: 1px solid #333;
                 z-index: 2;
                 border-radius: 10px;
-                padding: 0.25lh;
+                padding: 0.5lh;
                 display: flex;
                 gap: 0.25lh;
                 align-items: center;
+                font-family: Arial, sans-serif;
+            }
+
+            input[type="color"] {
+                border: 1px solid #333;
+                background: #fff;
             }
 
             button {
@@ -51,6 +58,39 @@
                 height: 100vh;
                 width: 100vw;
                 color: palevioletred;
+
+                &.noise1 {
+                    &::before {
+                        position: absolute;
+                        z-index: 1;
+                        inset: 0;
+                        opacity: 0.1;
+                        background: repeating-radial-gradient(
+                                closest-corner at 21% 21%,
+                                #fff,
+                                rgba(0, 0, 255, 0.5),
+                                rgb(0 0 0) 20%
+                            ),
+                            repeating-radial-gradient(
+                                closest-corner at 61% 21%,
+                                #fff,
+                                rgb(255 255 255 / 50%),
+                                rgb(0 0 0) 20%
+                            ),
+                            repeating-radial-gradient(
+                                closest-corner at 91% 51%,
+                                #fff,
+                                rgb(255 255 255 / 50%),
+                                rgb(0 0 0) 20%
+                            );
+
+                        background-size:
+                            1px 1px,
+                            1px 2px,
+                            1px 2px;
+                        content: "";
+                    }
+                }
             }
         </style>
     </head>

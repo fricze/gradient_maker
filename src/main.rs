@@ -14,8 +14,49 @@ fn get_target_as<T: JsCast>(event: Event) -> T {
 }
 
 #[component]
+fn GradientSelector(selected: Signal<String>) -> View {
+    let linear = "linear";
+    let radial = "radial";
+
+    view! {
+        form {
+            fieldset {
+                legend { "Gradient Type:" }
+
+                div {
+                    input(
+                        r#type="radio",
+                        id="linear",
+                        name="gradient",
+                        value="linear",
+                        on:input=move |_| selected.set(linear.to_string()),
+                        checked=(*selected.get_clone() == linear.to_string())
+                    )
+                    label(r#for="linear") { "Linear" }
+                }
+
+                div {
+                    input(
+                        r#type="radio",
+                        id="radial",
+                        name="gradient",
+                        value="radial",
+                        on:input=move |_| selected.set(radial.to_string()),
+                        checked=(*selected.get_clone() == radial.to_string())
+                    )
+                    label(r#for="radial") { "Radial" }
+                }
+            }
+        }
+    }
+}
+
+#[component]
 fn app() -> View {
     let rotation = create_signal("0".to_string());
+    let noise1 = create_signal("".to_owned());
+
+    let gradient_type = create_signal("linear".to_string());
 
     let colors = create_signal(vec![
         "#be3c3c".to_string(),
@@ -27,10 +68,19 @@ fn app() -> View {
 
     let gradient = create_memo(move || {
         let colors_values = colors.get_clone();
-        format!(
+        let g_type = gradient_type.get_clone();
+
+        if g_type == "radial" {
+            return format!(
+                "radial-gradient(circle, {}, {}, {})",
+                colors_values[0], colors_values[1], colors_values[2]
+            );
+        }
+
+        return format!(
             "linear-gradient({}deg, {}, {}, {})",
             rotation, colors_values[0], colors_values[1], colors_values[2]
-        )
+        );
     });
 
     let img_style = create_memo(move || format!("background: {}", gradient));
@@ -56,9 +106,22 @@ fn app() -> View {
         })
         .collect::<Vec<View>>();
 
+    let gradient_class = create_memo(move || "gradient".to_string() + &noise1.get_clone());
+
     view! {
         div (class="container") {
             div(class="controls") {
+                label {
+                    "Noise"
+
+                    input(r#type="checkbox", on:input=move |event: web_sys::Event| {
+                        let target_as_input_elem = get_target_as::<HtmlInputElement>(event);
+                        let input_value = target_as_input_elem.checked();
+                        noise1.set(if input_value { " noise1".to_owned() } else { "".to_owned() });
+                    })
+                }
+
+                (GradientSelector(gradient_type))
                 (colors_view)
                 input(r#type="range", min="0", max="360", on:input=move |event: web_sys::Event| {
                     let target_as_input_elem = get_target_as::<HtmlInputElement>(event);
@@ -77,7 +140,7 @@ fn app() -> View {
                 }) { "Save" }
             }
 
-            div (style=img_style, class="gradient", id="gradientImg") {
+            div (style=img_style, class="gradient".to_owned() + &noise1.get_clone(), id="gradientImg") {
                 span {
                     (text)
                 }
