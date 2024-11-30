@@ -21,9 +21,9 @@ fn GradientSelector(selected: Signal<String>) -> View {
     view! {
         form {
             fieldset {
-                legend { "Gradient Type:" }
+                legend { "Gradient Type" }
 
-                div {
+                label(class="horizontal-label") {
                     input(
                         r#type="radio",
                         id="linear",
@@ -32,10 +32,10 @@ fn GradientSelector(selected: Signal<String>) -> View {
                         on:input=move |_| selected.set(linear.to_string()),
                         checked=(*selected.get_clone() == linear.to_string())
                     )
-                    label(r#for="linear") { "Linear" }
+                    span { "Linear" }
                 }
 
-                div {
+                label(class="horizontal-label") {
                     input(
                         r#type="radio",
                         id="radial",
@@ -44,7 +44,7 @@ fn GradientSelector(selected: Signal<String>) -> View {
                         on:input=move |_| selected.set(radial.to_string()),
                         checked=(*selected.get_clone() == radial.to_string())
                     )
-                    label(r#for="radial") { "Radial" }
+                    span { "Radial" }
                 }
             }
         }
@@ -107,12 +107,21 @@ fn app() -> View {
         .collect::<Vec<View>>();
 
     let gradient_class = create_memo(move || "gradient".to_string() + &noise1.get_clone());
+    let rotation_style = create_memo(move || {
+        if gradient_type.get_clone() == "radial" {
+            "display: none;"
+        } else {
+            ""
+        }
+    });
 
     view! {
         div (class="container") {
             div(class="controls") {
-                label {
-                    "Noise"
+                label(id="noise", class="horizontal-label") {
+                    span {
+                        "Add noise"
+                    }
 
                     input(r#type="checkbox", on:input=move |event: web_sys::Event| {
                         let target_as_input_elem = get_target_as::<HtmlInputElement>(event);
@@ -122,25 +131,46 @@ fn app() -> View {
                 }
 
                 (GradientSelector(gradient_type))
-                (colors_view)
-                input(r#type="range", min="0", max="360", on:input=move |event: web_sys::Event| {
-                    let target_as_input_elem = get_target_as::<HtmlInputElement>(event);
-                    let input_value = target_as_input_elem.value();
-                    rotation.set(input_value);
-                })
 
-                input(r#type="text", value=text, on:input=move |event: web_sys::Event| {
-                    let target_as_input_elem = get_target_as::<HtmlInputElement>(event);
-                    let input_value = target_as_input_elem.value();
-                    text.set(input_value);
-                })
+                label(id="colors") {
+                    span(class="legend") {
+                        "Colors"
+                    }
+
+                    div(id="colors_inputs") {
+                        (colors_view)
+                    }
+                }
+
+                label(id="rotation", style=rotation_style) {
+                    span(class="legend") {
+                        "Rotation"
+                    }
+
+                    input(r#type="range", min="0", max="360", on:input=move |event: web_sys::Event| {
+                        let target_as_input_elem = get_target_as::<HtmlInputElement>(event);
+                        let input_value = target_as_input_elem.value();
+                        rotation.set(input_value);
+                    })
+                }
+
+                label(id="text") {
+                    span {
+                        "Text"
+                    }
+                    input(r#type="text", value=text, on:input=move |event: web_sys::Event| {
+                        let target_as_input_elem = get_target_as::<HtmlInputElement>(event);
+                        let input_value = target_as_input_elem.value();
+                        text.set(input_value);
+                    })
+                }
 
                 button(on:click=move |_| async move {
                     toPng("#gradientImg".to_string(), "my_img".to_string()).await;
                 }) { "Save" }
             }
 
-            div (style=img_style, class="gradient".to_owned() + &noise1.get_clone(), id="gradientImg") {
+            div (style=img_style, class=gradient_class, id="gradientImg") {
                 span {
                     (text)
                 }

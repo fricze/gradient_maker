@@ -5,58 +5,259 @@
         <title>Make gradient</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <style>
+            /* based on https://piccalil.li/blog/a-more-modern-css-reset/ */
+
+            /* Box sizing rules */
+            *,
+            *::before,
+            *::after {
+                box-sizing: border-box;
+            }
+
+            /* Prevent font size inflation */
+            html {
+                -moz-text-size-adjust: none;
+                -webkit-text-size-adjust: none;
+                text-size-adjust: none;
+            }
+
+            /* Remove default margin in favour of better control in authored CSS */
+            body,
+            h1,
+            h2,
+            h3,
+            h4,
+            p,
+            figure,
+            blockquote,
+            dl,
+            dd {
+                margin-block-end: 0;
+            }
+
+            /* Remove list styles on ul, ol elements with a list role, which suggests default styling will be removed */
+            ul[role="list"],
+            ol[role="list"] {
+                list-style: none;
+            }
+
+            /* Set core body defaults */
+            body {
+                line-height: 1.5;
+            }
+
+            /* Balance text wrapping on headings */
+            h1,
+            h2,
+            h3,
+            h4 {
+                text-wrap: balance;
+            }
+
+            /* A elements that don't have a class get default styles */
+            a:not([class]) {
+                text-decoration-skip-ink: auto;
+                color: currentColor;
+            }
+
+            /* Make images easier to work with */
+            img,
+            picture {
+                max-width: 100%;
+                display: block;
+            }
+
+            /* Inherit fonts for inputs and buttons */
+            input,
+            button,
+            textarea,
+            select {
+                font-family: inherit;
+                font-size: inherit;
+            }
+
+            /* Make sure textareas without a rows attribute are not tiny */
+            textarea:not([rows]) {
+                min-height: 10lh;
+            }
+
+            /* Anything that has been anchored to should have extra scroll margin */
+            :target {
+                scroll-margin-block: 5ex;
+            }
+
+            legend {
+                margin: 0;
+                padding: 0;
+            }
+
+            input[type="radio"] {
+                margin: 0;
+                padding: 0;
+            }
+        </style>
+        <style>
+            @import url("https://fonts.googleapis.com/css2?family=Work+Sans:ital,wght@0,100..900;1,100..900&display=swap");
+
             .reset {
                 border: 1px solid #333;
                 border-radius: 3px;
                 font-size: 40px;
-                padding: 0.5lh;
+                padding: 0.5rlh;
                 cursor: pointer;
-                margin: 1lh;
+                margin: 1rlh;
             }
 
-            .container {
+            form,
+            input,
+            label {
+                font-size: 20px;
+            }
+
+            fieldset {
+                border: none;
+                margin: 0;
+                padding: 0;
+            }
+
+            #noise {
                 display: flex;
-                flex-wrap: wrap;
-                gap: 10px;
-                margin: 1lh 0;
+                align-items: center;
+                gap: 0.125rlh;
+                flex-direction: row-reverse;
+            }
+
+            #text {
+                display: flex;
+                flex-direction: column;
+            }
+
+            #rotation {
+                display: flex;
+                flex-direction: column;
             }
 
             .controls {
                 position: absolute;
                 background: #fff;
-                border: 1px solid #333;
+                left: 2lh;
+                top: 2lh;
                 z-index: 2;
-                border-radius: 10px;
-                padding: 0.5lh;
+                padding: 2rlh;
                 display: flex;
-                gap: 0.25lh;
+                flex-direction: column;
+                gap: 1.5rlh;
+                align-items: flex-start;
+                font-family: "Work Sans", Arial, sans-serif;
+                box-shadow: rgba(0, 0, 0, 0) 0px 0px 0px 0px;
+                border-radius: 12px;
+            }
+
+            .horizontal-label {
+                display: flex;
+                flex-direction: row;
                 align-items: center;
-                font-family: Arial, sans-serif;
+                gap: 4px;
+            }
+
+            input {
+                background: #efefef;
+            }
+
+            input[type="checkbox"] {
+                position: relative;
+                overflow: hidden;
+                &:not(:checked) {
+                    &::after {
+                        border-radius: 2px;
+                        content: " ";
+                        position: absolute;
+                        width: 100%;
+                        height: 100%;
+                        background: #efefef;
+                    }
+                }
+            }
+
+            input[type="radio"] {
+                position: relative;
+                overflow: hidden;
+                &:not(:checked) {
+                    &::after {
+                        border-radius: 50%;
+                        content: " ";
+                        position: absolute;
+                        width: 100%;
+                        height: 100%;
+                        background: #efefef;
+                    }
+                }
+            }
+
+            input[type="text"] {
+                border: none;
+                padding: 0.25rlh;
+            }
+
+            #colors {
+                display: flex;
+                flex-direction: column;
+            }
+
+            #colors_inputs {
+                display: flex;
+                gap: 0.25rlh;
             }
 
             input[type="color"] {
-                border: 1px solid #333;
+                -webkit-appearance: none;
+                border: none;
                 background: #fff;
+                padding: 0;
+            }
+
+            input[type="color"]::-webkit-color-swatch-wrapper {
+                padding: 0;
+            }
+
+            input[type="color"]::-moz-color-swatch,
+            input[type="color"]::-webkit-color-swatch {
+                border: 1px solid rgb(119, 119, 119);
+                border-radius: 8px;
+                height: 1rlh;
             }
 
             button {
                 border: none;
                 border-radius: 3px;
                 background: #fff;
-                font-size: 24px;
-                padding: 0.25lh;
+                font-size: 20px;
+                padding: 0.25rlh;
                 cursor: pointer;
+                color: #fff;
+                background: color(display-p3 0 0.5 1);
+                &:hover {
+                    background: color(display-p3 0 0.5 0.8);
+                    /* box-shadow: 0 0 0 2px color(display-p3 0 0.5 1 / 0.1); */
+                    box-shadow: 0 0 0 2px #efefef;
+                }
+            }
+
+            form,
+            input,
+            button {
+                accent-color: color(display-p3 0 0.5 1);
             }
 
             .gradient {
-                font-family: Arial, sans-serif;
+                font-family: "Work Sans", Arial, sans-serif;
                 font-size: 40px;
                 display: grid;
                 place-items: center;
                 position: absolute;
                 inset: 0;
-                height: 100vh;
-                width: 100vw;
+                height: 100%;
+                width: 100%;
                 color: palevioletred;
 
                 &.noise1 {
