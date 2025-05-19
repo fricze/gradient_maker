@@ -8,11 +8,6 @@ extern "C" {
     async fn toPng(selector: String, name: String) -> JsValue;
 }
 
-// fn get_target_as<T: JsCast>(event: Event) -> T {
-//     let target = event.target().unwrap();
-//     target.dyn_into().unwrap()
-// }
-
 fn get_target_as<T: JsCast>(event: Event) -> Option<T> {
     event.target().and_then(|t| t.dyn_into::<T>().ok())
 }
@@ -98,16 +93,12 @@ fn app() -> View {
         .map(|(i, color)| {
             view! {
                 input(value=color, r#type="color", on:input=move |event: web_sys::Event| {
-                    match get_target_as::<HtmlInputElement>(event) {
-                        None => {},
-                        Some(target) => {
-                            let input_value = target.value();
-
-                            let mut val = colors.get_clone_untracked();
-                            val[i] = input_value;
-                            colors.set(val);
-                        }
-                    }
+                    get_target_as::<HtmlInputElement>(event).map(|target| {
+                        let input_value = target.value();
+                        let mut val = colors.get_clone_untracked();
+                        val[i] = input_value;
+                        colors.set(val);
+                    });
                 })
             }
         })
@@ -131,13 +122,10 @@ fn app() -> View {
                     }
 
                     input(r#type="checkbox", on:input=move |event: web_sys::Event| {
-                        match get_target_as::<HtmlInputElement>(event) {
-                            None => {},
-                            Some(target) => {
-                                let input_value = target.checked();
-                                noise1.set(if input_value { " noise1".to_owned() } else { "".to_owned() });
-                            }
-                        }
+                        get_target_as::<HtmlInputElement>(event).map(|target| {
+                            let input_value = target.checked();
+                            noise1.set(if input_value { " noise1".to_owned() } else { "".to_owned() });
+                        });
                     })
                 }
 
@@ -159,13 +147,10 @@ fn app() -> View {
                     }
 
                     input(r#type="range", min="0", max="360", on:input=move |event: web_sys::Event| {
-                        match get_target_as::<HtmlInputElement>(event) {
-                            None => {},
-                            Some(target) => {
-                                let input_value = target.value();
-                                rotation.set(input_value);
-                            }
-                        }
+                        get_target_as::<HtmlInputElement>(event).map(|target| {
+                            let input_value = target.value();
+                            rotation.set(input_value);
+                        });
                     })
                 }
 
@@ -177,13 +162,10 @@ fn app() -> View {
 
                     div(id="colors_inputs") {
                         input(value=text_color, r#type="color", on:input=move |event: web_sys::Event| {
-                            match get_target_as::<HtmlInputElement>(event) {
-                                None => {},
-                                Some(target) => {
-                                    let input_value = target.value();
-                                    text_color.set(input_value)
-                                }
-                            }
+                            get_target_as::<HtmlInputElement>(event).map(|target| {
+                                let input_value = target.value();
+                                text_color.set(input_value)
+                            });
                         })
                     }
                 }
@@ -193,13 +175,10 @@ fn app() -> View {
                         "Text"
                     }
                     input(r#type="text", value=text, on:input=move |event: web_sys::Event| {
-                        match get_target_as::<HtmlInputElement>(event) {
-                            None => {},
-                            Some(target) => {
-                                let input_value = target.value();
-                                text.set(input_value);
-                            }
-                        }
+                        get_target_as::<HtmlInputElement>(event).map(|target| {
+                            let input_value = target.value();
+                            text.set(input_value);
+                        });
                     })
                 }
 
