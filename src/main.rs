@@ -8,9 +8,13 @@ extern "C" {
     async fn toPng(selector: String, name: String) -> JsValue;
 }
 
-fn get_target_as<T: JsCast>(event: Event) -> T {
-    let target = event.target().unwrap();
-    target.dyn_into().unwrap()
+// fn get_target_as<T: JsCast>(event: Event) -> T {
+//     let target = event.target().unwrap();
+//     target.dyn_into().unwrap()
+// }
+
+fn get_target_as<T: JsCast>(event: Event) -> Option<T> {
+    event.target().and_then(|t| t.dyn_into::<T>().ok())
 }
 
 #[component]
@@ -26,9 +30,9 @@ fn GradientSelector(selected: Signal<String>) -> View {
                 label(class="horizontal-label") {
                     input(
                         r#type="radio",
-                        id="linear",
+                        id=linear,
                         name="gradient",
-                        value="linear",
+                        value=linear,
                         on:input=move |_| selected.set(linear.to_string()),
                         checked=(*selected.get_clone() == linear.to_string())
                     )
@@ -38,9 +42,9 @@ fn GradientSelector(selected: Signal<String>) -> View {
                 label(class="horizontal-label") {
                     input(
                         r#type="radio",
-                        id="radial",
+                        id=radial,
                         name="gradient",
-                        value="radial",
+                        value=radial,
                         on:input=move |_| selected.set(radial.to_string()),
                         checked=(*selected.get_clone() == radial.to_string())
                     )
@@ -64,6 +68,7 @@ fn app() -> View {
         "#ffffff".to_string(),
     ]);
 
+    let text_color = create_signal("#23d166".to_string());
     let text = create_signal("".to_string());
 
     let gradient = create_memo(move || {
@@ -83,10 +88,8 @@ fn app() -> View {
         );
     });
 
-    let img_style = create_memo(move || format!("background: {}", gradient));
-
-    // let color1 = colors.get_clone()[0].clone();
-    // let color2 = colors.get_clone()[1].clone();
+    let img_style =
+        create_memo(move || format!("background: {}; color: {};", gradient, text_color));
 
     let colors_view = colors
         .get_clone()
@@ -95,12 +98,16 @@ fn app() -> View {
         .map(|(i, color)| {
             view! {
                 input(value=color, r#type="color", on:input=move |event: web_sys::Event| {
-                    let target_as_input_elem = get_target_as::<HtmlInputElement>(event);
-                    let input_value = target_as_input_elem.value();
+                    match get_target_as::<HtmlInputElement>(event) {
+                        None => {},
+                        Some(target) => {
+                            let input_value = target.value();
 
-                    let mut val = colors.get_clone_untracked();
-                    val[i] = input_value;
-                    colors.set(val);
+                            let mut val = colors.get_clone_untracked();
+                            val[i] = input_value;
+                            colors.set(val);
+                        }
+                    }
                 })
             }
         })
@@ -124,9 +131,13 @@ fn app() -> View {
                     }
 
                     input(r#type="checkbox", on:input=move |event: web_sys::Event| {
-                        let target_as_input_elem = get_target_as::<HtmlInputElement>(event);
-                        let input_value = target_as_input_elem.checked();
-                        noise1.set(if input_value { " noise1".to_owned() } else { "".to_owned() });
+                        match get_target_as::<HtmlInputElement>(event) {
+                            None => {},
+                            Some(target) => {
+                                let input_value = target.checked();
+                                noise1.set(if input_value { " noise1".to_owned() } else { "".to_owned() });
+                            }
+                        }
                     })
                 }
 
@@ -148,10 +159,33 @@ fn app() -> View {
                     }
 
                     input(r#type="range", min="0", max="360", on:input=move |event: web_sys::Event| {
-                        let target_as_input_elem = get_target_as::<HtmlInputElement>(event);
-                        let input_value = target_as_input_elem.value();
-                        rotation.set(input_value);
+                        match get_target_as::<HtmlInputElement>(event) {
+                            None => {},
+                            Some(target) => {
+                                let input_value = target.value();
+                                rotation.set(input_value);
+                            }
+                        }
                     })
+                }
+
+
+                label(id="textColor") {
+                    span(class="legend") {
+                        "Text Color"
+                    }
+
+                    div(id="colors_inputs") {
+                        input(value=text_color, r#type="color", on:input=move |event: web_sys::Event| {
+                            match get_target_as::<HtmlInputElement>(event) {
+                                None => {},
+                                Some(target) => {
+                                    let input_value = target.value();
+                                    text_color.set(input_value)
+                                }
+                            }
+                        })
+                    }
                 }
 
                 label(id="text") {
@@ -159,13 +193,17 @@ fn app() -> View {
                         "Text"
                     }
                     input(r#type="text", value=text, on:input=move |event: web_sys::Event| {
-                        let target_as_input_elem = get_target_as::<HtmlInputElement>(event);
-                        let input_value = target_as_input_elem.value();
-                        text.set(input_value);
+                        match get_target_as::<HtmlInputElement>(event) {
+                            None => {},
+                            Some(target) => {
+                                let input_value = target.value();
+                                text.set(input_value);
+                            }
+                        }
                     })
                 }
 
-                button(on:click=move |_| async move {
+                button(on:click=async move |_| {
                     toPng("#gradientImg".to_string(), "my_img".to_string()).await;
                 }) { "Save" }
             }
